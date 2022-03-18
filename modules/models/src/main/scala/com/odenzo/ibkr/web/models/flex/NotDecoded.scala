@@ -1,4 +1,4 @@
-package com.odenzo.ibkr.web.models
+package com.odenzo.ibkr.web.models.flex
 
 import io.circe.*
 

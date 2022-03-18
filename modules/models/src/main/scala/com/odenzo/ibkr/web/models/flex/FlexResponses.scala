@@ -9,7 +9,6 @@ import io.circe.*
 import io.circe.syntax.*
 
 import com.odenzo.ibkr.web.models.*
-import com.odenzo.ibkr.web.models.NotDecoded
 
 import java.time.Instant
 

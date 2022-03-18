@@ -7,7 +7,7 @@ ThisBuild / githubTokenSource := TokenSource.Or(TokenSource.GitConfig("github.to
 ThisBuild / publishMavenStyle := true
 ThisBuild / bspEnabled        := false
 ThisBuild / scalaVersion      := "3.1.1"
-ThisBuild / Test / fork       := false
+ThisBuild / test / fork       := false
 ThisBuild / versionScheme     := Some("early-semver")
 
 val myScalacOptions = Seq(
@@ -58,23 +58,23 @@ lazy val root = project.in(file("."))
   )
 
 // Do I really want to run ScalaJS Tests ore JV< Test good enough?
-lazy val models = crossProject(JSPlatform, JVMPlatform)
+lazy val models = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .in(file("./modules/models"))
   .settings(
-    name               := "ibkr-portal-models",
-    description        := "Models for use in ScalaJS and Scala",
+    name        := "ibkr-flexquery-models",
+    description := "Models for use in ScalaJS and Scala",
     scalacOptions ++= myScalacOptions,
-    Test / test / fork := false,
+    test / fork := false,
     libraryDependencies ++= Seq(
-      XLib.lScribe.value,
+      XLib.scribe.value,
       XLib.cats.value,
       XLib.catsEffect.value,
-      XLib.lCirceCore.value,
-      XLib.lCirceGeneric.value,
-      XLib.lMunit.value,
-      XLib.lMunitCats.value,
-      XLib.lPPrint.value,
+      XLib.circeCore.value,
+      XLib.circeGeneric.value,
+      XLib.munit.value,
+      XLib.munitCats.value,
+      XLib.pprint.value,
       XLib.monocle.value,
       XLib.http4sCore.value,
       XLib.http4sEmber.value,
@@ -82,22 +82,26 @@ lazy val models = crossProject(JSPlatform, JVMPlatform)
     )
   )
 
-lazy val ibkr = crossProject(JSPlatform, JVMPlatform)
+lazy val ibkr = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .in(file("./modules/ibkr"))
   .dependsOn(models)
   .settings(
-    name          := "ibkr-portal",
-    description   := "A minimal IBKR Portal and Flex Query API Library",
+    name          := "ibkr-flexquery",
+    description   := "A minimal Flex Query API Library",
     libraryDependencies ++= Seq(
       XLib.http4sCore.value,
       XLib.http4sDsl.value,
       XLib.http4sCirce.value,
       XLib.http4sEmber.value,
-      XLib.catsRetry.value
+      XLib.catsRetry.value,
+      XLib.fs2.value,
+      XLib.fs2DataXml.value
     ),
-    libraryDependencies ++= Seq(XLib.lMunit.value, XLib.lMunitCats.value),
+    libraryDependencies ++= Seq(XLib.munit.value, XLib.munitCats.value, XLib.scribe.value),
     scalacOptions := myScalacOptions,
     Test / javaOptions += "-DCI=true",
-    Test / fork   := true
+    test / fork   := false
+  ).jvmSettings(
+    libraryDependencies ++= Libs.scribeSLF4J
   )

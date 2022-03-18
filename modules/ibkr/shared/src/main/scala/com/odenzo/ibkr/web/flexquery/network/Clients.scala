@@ -14,6 +14,5 @@ object Clients:
   def loggingRedirectsClient(logHeaders: Boolean = true, logBody: Boolean = false)(using Async[IO]): Resource[IO, Client[IO]] =
     import org.http4s.client.middleware.*
     val baseClient = EmberClientBuilder.default[IO].build
-
     baseClient.map(c => middleware.FollowRedirect(4)(c))
       .map(c => middleware.Logger(logHeaders = true, logBody = true)(c))

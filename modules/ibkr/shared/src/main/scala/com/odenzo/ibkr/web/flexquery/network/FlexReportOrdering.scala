@@ -6,6 +6,8 @@ import cats.effect.*
 import cats.effect.syntax.all.*
 import cats.syntax.all.{given, *}
 import com.odenzo.ibkr.web.base.*
+import com.odenzo.ibkr.web.flexquery.errors.*
+import com.odenzo.ibkr.web.flexquery.parsing.*
 import com.odenzo.ibkr.web.base.OPrint.*
 import io.circe.Decoder
 import org.http4s.*
@@ -35,5 +37,8 @@ object FlexReportOrdering {
     scribe.info(s"Result XML ${oprint(resultXmlStr)}")
     // We need to check for errors or get the "ticket number"
     // refCode <- IO.fromOption(extractChildText(ticket, "ReferenceCode"))(MalformedResponse("No Valid Refcode"))
-    resultXmlStr
+    resultXmlStr.flatMap(FlexStatementRs.fromXml(_)).flatMap {
+      case FlexStatementRs.FlexStatementSuccessRs(status, referenceCode)   => referenceCode.pure
+      case FlexStatementRs.FlexStatementErrorRs(status, errorCode, errMsg) => IO.raiseError(BadResponseStatus(status, errorCode, errMsg))
+    }
 }

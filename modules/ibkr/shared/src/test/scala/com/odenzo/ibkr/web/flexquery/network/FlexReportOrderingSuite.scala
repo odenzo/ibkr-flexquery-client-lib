@@ -1,9 +1,9 @@
-package com.odenzo.ibkr.web.flexquery
+package com.odenzo.ibkr.web.flexquery.network
 
 import cats.effect.*
 import cats.syntax.all.*
 import com.odenzo.ibkr.*
-import com.odenzo.ibkr.web.flexquery.FlexAPI
+import com.odenzo.ibkr.web.flexquery.{FlexAPI, RestTest}
 import munit.*
 import org.http4s.client.Client
 import org.junit.experimental.categories.Category
@@ -12,13 +12,26 @@ import retry.{RetryPolicies, retryingOnSomeErrors}
 import scala.concurrent.duration.*
 import scala.xml.Elem
 
-class FlexApiIT extends RestTest:
-  override def munitIgnore: Boolean = true
+class FlexReportOrderingSuite extends RestTest:
+  override def munitIgnore: Boolean = false
   val xmlprint                      = new scala.xml.PrettyPrinter(80, 4)
+  given FlexContext                 = context
 
-  test("E2E") {
+  test("RequestBadNumber") {
     scribe.info("OK")
-    Assertions.assert(true)
+    clientR.use {
+      client =>
+        given Client[IO] = client
+        FlexReportOrdering.reportRequestApp("666").flatTap { ticketNum => IO(scribe.info(s"Ticket Number $ticketNum")) }
+    }
+  }
+
+  test("XML") {
+    clientR.use {
+      client =>
+        given Client[IO] = client
+        FlexReportOrdering.reportRequestApp(xmlQuery).flatTap { ticketNum => IO(scribe.info(s"Ticket Number $ticketNum")) }
+    }
   }
 //  test("IT=Pickup Existing") {
 //    val ref                               = "4108446371"

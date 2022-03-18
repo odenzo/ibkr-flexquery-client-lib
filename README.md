@@ -25,5 +25,8 @@ I tranform these into standard datastructures, but not strongly types.
 
 For CVS you can have header and trailor records, column headers and/ secion code and line decriptor.
 
-Account Alias instead of Account ID should be condifgured.
-Anyway, reportss are so configurable not much I will do on parsing except the ettings I use.
+Account Alias instead of Account ID should be configured on IB.
+Anyway, reportss are so configurable not much I will do on parsing. The purpose of this was to
+try and make "Records" like Shapeless but just using the Scala 3 tuples.
+- Failed so far :-/
+
