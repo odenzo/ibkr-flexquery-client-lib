@@ -83,7 +83,7 @@ lazy val models = crossProject(JVMPlatform, JSPlatform)
   )
 
 lazy val ibkr = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Full)
+  .crossType(CrossType.Pure)
   .in(file("./modules/ibkr"))
   .dependsOn(models)
   .settings(

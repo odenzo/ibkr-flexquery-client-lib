@@ -57,3 +57,6 @@ trait FU:
       case Some(t) => ApplicativeThrow[F].pure(t)
 
 object FU extends FU
+
+object IOU:
+  def notDone = IO.raiseError(Throwable("Not Implemented"))
