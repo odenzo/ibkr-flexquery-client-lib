@@ -48,55 +48,36 @@ ThisBuild / autoAPIMappings := true
 //
 
 lazy val root = project.in(file("."))
-  .aggregate(models.jvm, models.js, ibkr.jvm, ibkr.js)
+  .aggregate(flexquery.jvm, flexquery.js)
   .settings(
-    name           := "ibkr",
-    description    := "A minimal IBKR Portal and Flex Query Web API Library",
+    name           := "ibkr-flexquery-root",
+    description    := "A minimal IBKR Flex Query Web API Library",
     startYear      := Some(2022),
     publish / skip := true,
     scalacOptions  := myScalacOptions
   )
 
-// Do I really want to run ScalaJS Tests ore JV< Test good enough?
-lazy val models = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("./modules/models"))
-  .settings(
-    name        := "ibkr-flexquery-models",
-    description := "Models for use in ScalaJS and Scala",
-    scalacOptions ++= myScalacOptions,
-    test / fork := false,
-    libraryDependencies ++= Seq(
-      XLib.scribe.value,
-      XLib.cats.value,
-      XLib.catsEffect.value,
-      XLib.circeCore.value,
-      XLib.circeGeneric.value,
-      XLib.munit.value,
-      XLib.munitCats.value,
-      XLib.pprint.value,
-      XLib.monocle.value,
-      XLib.http4sCore.value,
-      XLib.http4sEmber.value,
-      XLib.scalaXML.value
-    )
-  )
-
-lazy val ibkr = crossProject(JVMPlatform, JSPlatform)
+lazy val flexquery = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .in(file("./modules/ibkr"))
-  .dependsOn(models)
   .settings(
     name          := "ibkr-flexquery",
     description   := "A minimal Flex Query API Library",
     libraryDependencies ++= Seq(
+      XLib.cats.value,
+      XLib.catsEffect.value,
+      XLib.catsRetry.value,
+      XLib.circeCore.value,
+      XLib.circeGeneric.value,
+      XLib.fs2.value,
+      XLib.fs2DataXml.value,
       XLib.http4sCore.value,
       XLib.http4sDsl.value,
-      XLib.http4sCirce.value,
       XLib.http4sEmber.value,
-      XLib.catsRetry.value,
-      XLib.fs2.value,
-      XLib.fs2DataXml.value
+      XLib.monocle.value,
+      XLib.pprint.value,
+      XLib.scalaXML.value,
+      XLib.scribe.value
     ),
     libraryDependencies ++= Seq(XLib.munit.value, XLib.munitCats.value, XLib.scribe.value),
     scalacOptions := myScalacOptions,

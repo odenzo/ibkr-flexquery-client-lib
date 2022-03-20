@@ -12,6 +12,9 @@ import scala.util.chaining.{*, given}
 /** SScala JS / JVM Cross Platform Parsing */
 trait XMLParsing {
 
+  /**
+    * This parses to event and will generally throw error if not Well Formed. Unfortunately it can also hang on not-well-formed documents
+    */
   def parseToEvents(xml: String): IO[List[XmlEvent]] = fs2.Stream.emit(xml).through(events[IO, String]).through(normalize).compile.toList
 
   def extractEvents(tagName: String, texts: List[XmlEvent]): List[XmlEvent] = {

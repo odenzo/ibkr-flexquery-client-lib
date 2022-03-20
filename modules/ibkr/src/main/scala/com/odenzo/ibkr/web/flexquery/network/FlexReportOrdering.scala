@@ -5,10 +5,10 @@ import cats.data.*
 import cats.effect.*
 import cats.effect.syntax.all.*
 import cats.syntax.all.{given, *}
-import com.odenzo.ibkr.web.base.*
+import com.odenzo.ibkr.web.flexquery.utils.*
 import com.odenzo.ibkr.web.flexquery.errors.*
 import com.odenzo.ibkr.web.flexquery.parsing.*
-import com.odenzo.ibkr.web.base.OPrint.*
+
 import io.circe.Decoder
 import org.http4s.*
 import org.http4s.Method.*

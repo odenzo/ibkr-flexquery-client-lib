@@ -4,7 +4,8 @@ import cats.effect.*
 import cats.effect.syntax.all.*
 import cats.syntax.all.*
 import com.odenzo.ibkr.*
-import com.odenzo.ibkr.web.base.OPrint.oprint
+import com.odenzo.ibkr.web.flexquery.utils.*
+
 import com.odenzo.ibkr.web.flexquery.{BaseTest, FlexAPI}
 import fs2.data.xml.{QName, XmlEvent, events, normalize}
 import munit.*
@@ -45,35 +46,3 @@ class XMLParsingSuite extends BaseTest:
     scribe.info(s"Filtered Head: $res \n\n ${oprint(res)}")
 
   }
-
-//  test("dealWithEWrrors") {
-//    FlexAPI.dealWithErrors(badResponse).attempt.flatTap {
-//      case Left(err) => scribe.info(s"dealthWithErrors OK").pure
-//      case Right(v)  => scribe.info("Had a Value").pure
-//    }
-//  }
-//
-//  test("XML Splicing") {
-//    val pp          = new scala.xml.PrettyPrinter(80, 4)
-//    val txt: String = pp.format(badResponse)
-//    scribe.info("BadResponse Sample:\n $txt")
-//    // No Good XML library that does scalaJS. Phobos for the JVM? fs2-data-xml
-//    // badResponse.t
-//  }
-
-//  val retryProg: IO[WarnStatus] = IO.sleep(2.seconds) >>
-//    IO(scribe.info("GotBadResult")) >>
-//    IO.raiseError(WarnStatus(1019, "Testing"))
-//
-//  test("Manial Retry") {
-//    val foo: IO[WarnStatus] = retryingOnSomeErrors(
-//      isWorthRetrying = FlexAPI.shouldRetry _,
-//      policy = RetryPolicies.limitRetries[IO](3) join RetryPolicies.constantDelay(1.seconds),
-//      onError = FlexAPI.logError _
-//    )(retryProg)
-//    foo.attempt map {
-//      case Left(err) => scribe.info(s"OK Failed As Expectd, Last Error: ${oprint(err)}")
-//      case Right(v)  => fail(s"Should have been an error on reties but got ${oprint(v)}")
-//    }
-//
-//  }

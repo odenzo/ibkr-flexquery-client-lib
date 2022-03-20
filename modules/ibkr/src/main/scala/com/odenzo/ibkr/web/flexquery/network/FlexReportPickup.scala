@@ -3,22 +3,24 @@ package com.odenzo.ibkr.web.flexquery.network
 import cats.*
 import cats.data.*
 import cats.effect.*
-import cats.effect.IO.{IOCont, Uncancelable}
-import cats.effect.syntax.all.*
+//import cats.effect.syntax.all.*
 import cats.syntax.all.*
-import com.odenzo.ibkr.web.base.*
-import com.odenzo.ibkr.web.base.OPrint.*
+import com.odenzo.ibkr.web.flexquery.utils.*
+
 import io.circe.Decoder
 import org.http4s.*
 import org.http4s.Method.*
 import org.http4s.client.Client
-import org.http4s.Headers.{given, *}
+import org.http4s.Headers.{*, given}
 import org.http4s.client.dsl.io.*
 import org.http4s.syntax.all.*
 import retry.*
+import retry.RetryDetails.*
+import retry.syntax.all.*
 import com.odenzo.ibkr.web.flexquery.errors.*
 import com.odenzo.ibkr.web.flexquery.parsing.FlexStatementRs
-import com.odenzo.ibkr.web.flexquery.modelling.*
+import com.odenzo.ibkr.web.flexquery.modelling.{FlexReport, *}
+
 import scala.concurrent.duration.*
 import scala.util.control.NoStackTrace
 import scala.xml.Elem
@@ -32,30 +34,28 @@ object FlexReportPickup {
   def reportPickupRq(referenceCode: String)(using ctx: FlexContext): Request[IO] =
     Request(GET, uri = (ctx.baseUri / "FlexStatementService.GetStatement").withQueryParam("q", referenceCode))
 
-  val maxAttempts = 10
-  val delay       = 10.seconds
-  val retryPolicy = RetryPolicies.limitRetries[IO](maxAttempts).join(RetryPolicies.exponentialBackoff[IO](delay))
-
-  def shouldRetry(err: Throwable): IO[Boolean]                     = {
-    scribe.info(s"Worth Retrying  ${oprint(err)}")
-    err match
-      case other => false.pure
-  }
-  def logError(e: Throwable, retryDetails: RetryDetails): IO[Unit] = IO(scribe.warn(s"Retry $retryDetails because of ${oprint(e)}"))
+  val maxAttempts: Int      = 10
+  val delay: FiniteDuration = 10.seconds
 
   def sniffDelimeted(v: String): IO[FlexReportFormat] = {
     import com.odenzo.ibkr.web.flexquery.modelling.FlexReportFormat.*
     val delims: List[(Char, FlexReportFormat)] = List(',' -> CSV, '\t' -> TABBED_TEXT, '|' -> PIPED_TEXT)
 
     // Yes this is atrocious, at least doing first line only
-    val firstLine                            = v.takeWhile(c => c != '\n')
-    val min: ((Char, FlexReportFormat), Int) = delims.fproduct(d => firstLine.indexOf(d._1)).minBy(_._2)
-    if min._2 < 0 then IO.raiseError(MalformedResponse("Could not determined delimineted file format"))
-    else min._1._2.pure
+    val firstLine                                    = v.takeWhile(c => c != '\n')
+    scribe.info(s"FirstLine: $firstLine")
+    val found: List[((Char, FlexReportFormat), Int)] = delims.flatMap {
+      d =>
+        val i = firstLine.indexOf(d._1)
+        if i < 0 then None else Some(d, i)
+    }
+
+    if found.isEmpty then IO.raiseError(MalformedResponse("Could not determined delimineted file format"))
+    else found.minBy(_._2)._1._2.pure
   }
 
-  /** A single attempt to pickup a report alreadt ordered. */
-  def reportPickup(referenceCode: String)(using client: Client[IO], ctx: FlexContext): IO[Either[FlexStatementErrorRs, FlexReport]] = {
+  /** A single attempt to pickup a report alreadt ordered. Expected raised error ReportGenerationInProgres */
+  def reportPickup(referenceCode: String)(using client: Client[IO], ctx: FlexContext): IO[FlexReport] = {
     /* Generally this will return a response in the sselected format on web site for flexquery, but error seeem to come in XML always.
      *  We don't deal with succes body in general btw.
 
@@ -73,54 +73,33 @@ object FlexReportPickup {
         for {
           bodyText  <- rs.bodyText.compile.string
           mediaType <- media
-          report      <- mediaType match {
-                         case MediaType.text.xml =>                          FlexStatementRs.sniffXml(bodyText).map(eether =>  eether.map(v => FlexReport(FlexReportFormat.XML,v)))
-                         case _                  =>                            sniffDelimeted(bodyText).map(t => FlexReport(t, bodyText).asRight)
-
+          report    <- mediaType match {
+                         case MediaType.text.xml => FlexStatementRs.sniffXml(bodyText).map(xml => FlexReport(FlexReportFormat.XML, xml))
+                         case _                  => sniffDelimeted(bodyText).map(t => FlexReport(t, bodyText))
                        }
         } yield report
     }
   }
+
+  /** This fetches a report, waiting up to 10 minutes for it to be available. */
+  def fetchReport(referenceCode: String)(using client: Client[IO], ctx: FlexContext): IO[FlexReport] = {
+    val action: IO[FlexReport] = reportPickup(referenceCode)
+
+    val policy: RetryPolicy[IO] = RetryPolicies.limitRetries[IO](maxAttempts).join(RetryPolicies.exponentialBackoff[IO](delay))
+
+    val logit: (Throwable, RetryDetails) => IO[Unit] =
+      (res: Throwable, details: RetryDetails) => IO(scribe.warn(s"Failure In Retry: $details because of ${oprint(res)}"))
+
+    def retryWhen(e: Throwable): IO[Boolean] = e match {
+      case e: ReportGenerationInProgress => IO.pure(true)
+      case _                             => IO.pure(false)
+    }
+
+    retryingOnSomeErrors[FlexReport](
+      isWorthRetrying = retryWhen _,
+      policy = policy,
+      onError = logit
+    )(action)
+
+  }
 }
-
-/** PIcks up a flex report, there is currently no retry implemented, ReportGenerationInProgress can be retried. */
-// def retryingPickup(referenceCode: String)(using client: Client[IO], ctx: FlexContext): IO[Elem] =
-//   for {
-//     _            <- IO(scribe.info(s"Picking Up Flex Report for $referenceCode"))
-//     report       <- retryingOnSomeErrors(
-//                       isWorthRetrying = shouldRetry _,T
-//                       onError = logError _
-//                     )(reportPickup(referenceCode))
-//     report: Elem <- client.expect[Elem]()
-//     _             = scribe.info(s"Resulting XML Respone on Pickup: $report.")
-//     v            <- dealWithErrors(report) // Will raise exception here
-//   } yield report
-
-// /** Assumes only 0 or 1 named element */
-// private def extractChildText(root: Elem, childName: String): Option[String] = (root \ childName).headOption.map(_.text)
-
-// def errorM(root: Elem): IO[(Int, String)] = IO.delay {
-//   scribe.info(s"Executing Error M in Delay")
-//   val code: Option[Int]   = extractChildText(root, "ErrorCode").map(_.toInt)
-//   val msg: Option[String] = extractChildText(root, "ErrorMessage")
-//   code.zip(msg)
-// }.flatMap(IO.fromOption(_)(NoErrorInfo))
-
-// /** Raises any errors or plain Unit if successful */
-// def dealWithErrors(root: Elem): IO[Elem] =
-//   for {
-//     status <- IO(extractChildText(root, "Status").getOrElse("Success")) // No Status on success for result, boo
-//     _       = scribe.info(s"Result Status: $status")
-//     res    <- status match
-//                 case "Success" => IO.pure(root)
-//                 case "Warn"    =>
-//                   scribe.info(s"WARNING")
-//                   errorM(root).map((x: (Int, String)) => WarnStatus.apply(x._1, x._2))
-//                     .flatTap(e => IO(scribe.warn(s"Raising Warning: ${oprint(e)}")))
-//                     .flatMap(IO.raiseError[Elem])
-//                 case "Error"   =>
-//                   errorM(root).map((x: (Int, String)) => ErrorStatus.apply(x._1, x._2))
-//                     .flatTap(e => IO(scribe.warn(s"Raising Error: ${oprint(e)}")))
-//                     .flatMap(IO.raiseError[Elem](Throwable("Some Error")))
-//                 case other     => IO.raiseError[Elem](MalformedResponse(s"Invalid Response $root - Status"))
-//   } yield res

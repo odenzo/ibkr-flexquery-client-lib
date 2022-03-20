@@ -4,6 +4,10 @@ Small little program to fetch IBKR Flex Queries already defined on Client Portal
 This uses IBKR Verion 3 API.
 It has both Scala 3 and ScalaJS cross-compilation, but the XML support is still a bit weak on ScalaJS side.
 
+Not much to this, other than it handles the retrying in case report is still being processed.
+Tags the report with the report kind and just returns the XML, CSV, TSV etc in String form.
+
+
 ## Instructions for FlexQueries
 
 

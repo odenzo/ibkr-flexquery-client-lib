@@ -1,4 +1,4 @@
-package com.odenzo.ibkr.web.base
+package com.odenzo.ibkr.web.flexquery.utils
 
 import cats.*
 import cats.data.*

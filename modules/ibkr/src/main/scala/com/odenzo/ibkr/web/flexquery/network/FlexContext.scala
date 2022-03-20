@@ -5,7 +5,7 @@ import org.http4s.client.*
 import org.http4s.client.dsl.io.*
 import org.http4s.dsl.*
 import org.http4s.dsl.io.*
-import org.http4s.syntax.all.{*}
+import org.http4s.syntax.all.*
 
 /**
   * There is only one base endpooint for Flex API -- I think nothing about different logins (paper/live etc) But we do have a Token. This

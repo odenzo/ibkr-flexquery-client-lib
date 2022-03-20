@@ -12,7 +12,7 @@ import retry.{RetryPolicies, retryingOnSomeErrors}
 import scala.concurrent.duration.*
 import scala.xml.Elem
 
-class FlexReportOrderingSuite extends RestTest:
+class FlexReportOrderingITest extends RestTest:
   override def munitIgnore: Boolean = false
 
   given FlexContext = context
