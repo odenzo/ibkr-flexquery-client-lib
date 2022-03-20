@@ -7,8 +7,10 @@ ThisBuild / githubTokenSource := TokenSource.Or(TokenSource.GitConfig("github.to
 ThisBuild / publishMavenStyle := true
 ThisBuild / bspEnabled        := false
 ThisBuild / scalaVersion      := "3.1.1"
-ThisBuild / test / fork       := false
+ThisBuild / Test / fork       := false
 ThisBuild / versionScheme     := Some("early-semver")
+
+ThisBuild / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
 
 val myScalacOptions = Seq(
   "-source",
@@ -40,35 +42,24 @@ ThisBuild / Compile / doc / scalacOptions ++=
 ThisBuild / apiURL          := Some(url("https://example.org/api/"))
 ThisBuild / autoAPIMappings := true
 
-// Seq("-versions-dictionary-url", "https://odenzo.github.com/ibkr-portal/versions.json") ++
-//   Seq("-groups") ++
-//    Seq("-external-mappings:.*scala.*::scaladoc3::https://scala-lang.org/api/3.x/,.*java.*::javadoc::https://docs.oracle")
-// .com/javase/8/docs/api/
-
-//
-
 lazy val root = project.in(file("."))
   .aggregate(flexquery.jvm, flexquery.js)
   .settings(
     name           := "ibkr-flexquery-root",
-    description    := "A minimal IBKR Flex Query Web API Library",
-    startYear      := Some(2022),
     publish / skip := true,
     scalacOptions  := myScalacOptions
   )
 
 lazy val flexquery = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
-  .in(file("./modules/ibkr"))
+  .in(file("./modules/flexquery"))
   .settings(
-    name          := "ibkr-flexquery",
-    description   := "A minimal Flex Query API Library",
+    name        := "ibkr-flexquery",
+    description := "A minimal Flex Query API Library",
     libraryDependencies ++= Seq(
       XLib.cats.value,
       XLib.catsEffect.value,
       XLib.catsRetry.value,
-      XLib.circeCore.value,
-      XLib.circeGeneric.value,
       XLib.fs2.value,
       XLib.fs2DataXml.value,
       XLib.http4sCore.value,
@@ -80,9 +71,8 @@ lazy val flexquery = crossProject(JVMPlatform, JSPlatform)
       XLib.scribe.value
     ),
     libraryDependencies ++= Seq(XLib.munit.value, XLib.munitCats.value, XLib.scribe.value),
-    scalacOptions := myScalacOptions,
-    Test / javaOptions += "-DCI=true",
-    test / fork   := false
+    scalacOptions ++= myScalacOptions,
+    Test / javaOptions += "-DinCI=true"
   ).jvmSettings(
     libraryDependencies ++= Libs.scribeSLF4J
   )

@@ -178,8 +178,8 @@ object XLib {
   lazy val http4sCirce = Def.setting("org.http4s" %%% "http4s-circe" % V.http4s)
   lazy val http4sXml   = Def.setting("org.http4s" %%% "http4s-scala-xml" % V.http4s)
 
-  lazy val fs2        = Def.setting("co.fs2" %% "fs2-core" % V.fs2)
-  lazy val fs2DataXml = Def.setting("org.gnieh" %% "fs2-data-xml" % V.fs2Data)
+  lazy val fs2        = Def.setting("co.fs2" %%% "fs2-core" % V.fs2)
+  lazy val fs2DataXml = Def.setting("org.gnieh" %%% "fs2-data-xml" % V.fs2Data) // Stub ScalaJS Only, thanks for the warning
 
   //  lazy val catsRetru: Def.setting = Def.setting("com.github.cb372", "cats-retry", Version.catsRetry)
   //  val fs2: Def.setting            = Def.setting("co.fs2", "fs2-core", Version.fs2) // fs-io is not xplatform, to JS at least.
