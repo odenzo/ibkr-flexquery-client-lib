@@ -1,5 +1,10 @@
 # IBKR Client FlexQuery Lib
 
+Required/Tested On: 
+    - Scala 3+
+    - JDK 11 / JDK 17
+    - ScalaJS 1.9 (WIP)
+
 Small little program to fetch IBKR Flex Queries already defined on Client Portal.
 This uses IBKR Verion 3 API.
 It has both Scala 3 and ScalaJS cross-compilation, but the XML support is still a bit weak on ScalaJS side.
