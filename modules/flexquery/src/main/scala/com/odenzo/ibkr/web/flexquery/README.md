@@ -1,28 +1,51 @@
-# Flex Reporting Query API
+# IBKR Flex Reporting Query API
 
-+ Enable in Account Settings
-+ Calls flex reporting queries that are already defined (e.g. via Portal website)
-+ https://gdcdyn.interactivebrokers.com/Universal/servlet/FlexStatementService.SendRequest?t=TOKEN&q=QUERY_ID&v=3
-This seems to be an older XML based system, not sure there is a new equivalent:
-+ Once a flex request is made, XML returned with a pickup token
-+ Pick up with:
-+ ype the following URL in your browser’s Address field:
-  https://gdcdyn.interactivebrokers.com/Universal/servlet/FlexStatement
-  Service.GetStatement?q=REFERENCE_CODE&t=TOKEN
-  &v=VERSION
+IBKR Flex Queries are a great way to get reporting data.
+You can also get them on-demand via APIs, but cannot change the parameters via the API, just whatever the UI settings are at in Web Portal.
 
-Where:
-REFERENCE_CODE is the code you received as part of the response when you placed the request
-TOKEN is your current token
-VERSION is the version of the Flex Web Service Version you are using. You can set this to 2 or 3. Note that if you do not specify a Version, the system will use Version 2.
+This small helper lets you fetch those reports, main entry i in `FlexAPI`
 
-Overview of Version 3 API is: https://www.interactivebrokers.com/en/software/am/am/reports/flex_web_service_version_3.htm
+```scala
+def fetchReport(flexQueryId: String, flexToken: String): IO[FlexReport] = {
+    given FlexContext = FlexContext(flexToken)
+
+    Clients.loggingRedirectsClient(true, false).use {
+      client => // Nothing special about client, roll your own if want.
+        given Client[IO] = client
+        for {
+          referenceCode <- FlexReportOrdering.reportRequestApp(flexQueryId)
+          report        <- FlexReportPickup.fetchReport(referenceCode)
+        } yield report
+    }
+}
+```
+It will automatically retry on "report not ready" error and sniff the true respone format.
+
+FlexReport returns the type of the report (XML, CSV, TSV, or Pipe Text)
+Up to you to chooe your favorite tools to manipulate the report.
 
 
+## First setup some FlexQueries
++ Enable in Account Settings and issue yourself a FLEX TOKEN for authorization.
++ Define a flexquery and the parameters to call it in Client Portal. Note the QueryID (a number not the unique name)
 
-Programmatic access requires the User-Agent HTTP header to be set. Accepted values are: Blackberry or Java (LOL)
 
-We get a key from setting it up in IBKR Portal, this key is sourced from environment variable IBKR_FLWX_KEY
+## IBKR References
+
+- Flex Web Services info -- https://guides.interactivebrokers.com/am/am/reports/using_the_flex_web_service.htm
+- now look under the User Guide (https://guides.interactivebrokers.com/cp/cp.htm) and then it is 
+under `Performance & Statements` ->  `Reports` ->  `Flex Queries` . Which is baically where it is on the UI too.
+ 
 
 
-org.http4s.scalaxml
+## Pending Work
+
+- Still working on ScalaJS side, 
+  - getting HTTP4S Ember client to link (fallback to STTP if needed)
+  - Trying to find a JS/JVM for usage, may have to write a facade. Now very simply need, but nice
+    to be able to parse stuff and diplay all in web app.
+
+- Data models, IBKR has a few and not too happy with OpenAPI Spec generation.
+  - Custom OpenAPI generation
+  - Centralize repo with hand written (and with Codecs), crowd-sourcing ideal!
+
