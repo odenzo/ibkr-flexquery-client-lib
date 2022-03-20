@@ -14,6 +14,7 @@ object V {
   val circe              = "0.15.0-M1"
   val doobie             = "1.0.0-RC2"
   val fs2                = "3.2.5"
+  val fs2Data            = "1.3.1"
   val http4s             = "1.0.0-M31"
   val logback            = "1.2.11"
   val monocle            = "3.1.0"
@@ -91,7 +92,9 @@ object Libs {
     "com.softwaremill.sttp.client3" %% "circe" % V.sttpClient
   )
 
-  val scribe = Seq("com.outr" %% "scribe" % V.scribe, "ch.qos.logback" % "logback-classic" % "1.2.10")
+  val scribe        = Seq("com.outr" %% "scribe" % V.scribe)
+  val scribeLogback = Seq("com.outr" %% "scribe" % V.scribe, "ch.qos.logback" % "logback-classic" % V.logback)
+  val scribeSLF4J   = Seq("com.outr" %% "scribe" % V.scribe, "com.outr" %% "scribe-slf4j" % V.scribe)
 
   val circe = Seq(
     "io.circe" %% "circe-core"    % V.circe,
@@ -139,19 +142,18 @@ object Libs {
 
 object XLib {
 
-  import OModules.OModule
-
   lazy val scalaXML        = Def.setting("org.scala-lang.modules" %%% "scala-xml" % V.scalaXML)
   lazy val cats            = Def.setting("org.typelevel" %%% "cats-core" % V.cats)
   lazy val catsEffect      = Def.setting("org.typelevel" %%% "cats-effect" % V.catsEffect)
   lazy val catsRetry       = Def.setting("com.github.cb372" %%% "cats-retry" % V.catsRetry)
   lazy val catsCollections = Def.setting("org.typelevel" %%% "cats-collections-core" % V.cats)
   lazy val monocle         = Def.setting("dev.optics" %%% "monocle-core" % V.monocle)
-  lazy val lPPrint         = Def.setting("com.lihaoyi" %%% "pprint" % V.pprint)
-  lazy val lScribe         = Def.setting("com.outr" %%% "scribe" % V.scribe)
-  lazy val lMunit          = Def.setting("org.scalameta" %%% "munit" % V.munit % Test)
-  lazy val lScodecBits     = Def.setting("org.scodec" %%% "scodec-bits" % V.scodecBits)
-  lazy val lMunitCats      = Def.setting("org.typelevel" %%% "munit-cats-effect-3" % V.munitCats % Test)
+  lazy val pprint          = Def.setting("com.lihaoyi" %%% "pprint" % V.pprint)
+  lazy val scribe          = Def.setting("com.outr" %%% "scribe" % V.scribe)
+  // lazy val scribeSLF4      = Def.setting("com.outr" %%% "scribe-slf4j" % V.scribe)
+  lazy val munit           = Def.setting("org.scalameta" %%% "munit" % V.munit % Test)
+  lazy val scodecBits      = Def.setting("org.scodec" %%% "scodec-bits" % V.scodecBits)
+  lazy val munitCats       = Def.setting("org.typelevel" %%% "munit-cats-effect-3" % V.munitCats % Test)
 
   //
 //
@@ -159,14 +161,14 @@ object XLib {
 //  val lScalaCss     = Def.setting("com.github.japgolly.scalacss" %%% "core" % scalaCssV)
 //  val lScalaTagsCss = Def.setting("com.github.japgolly.scalacss" %%% "ext-scalatags" % scalaCssV)
 //
-  lazy val lCirceCore    = Def.setting("io.circe" %%% "circe-core" % V.circe)
-  lazy val lCirceGeneric = Def.setting("io.circe" %%% "circe-generic" % V.circe)
-  lazy val lCircePointer = Def.setting("io.circe" %%% "circe-pointer" % V.circe)
-  lazy val lCirceParser  = Def.setting("io.circe" %%% "circe-parser" % V.circe)
-  lazy val lCirceYaml    = Def.setting("io.circe" %%% "circe-yaml" % V.circe)
-  lazy val lCirceRefined = Def.setting("io.circe" %%% "circe-refined" % V.circe)
-  lazy val lCirceExtra   = Def.setting("io.circe" %%% "circe-extras" % V.circe)
-  lazy val lCirceNumbers = Def.setting("io.circe" %%% "circe-numbers" % V.circe)
+  lazy val circeCore    = Def.setting("io.circe" %%% "circe-core" % V.circe)
+  lazy val circeGeneric = Def.setting("io.circe" %%% "circe-generic" % V.circe)
+  lazy val circePointer = Def.setting("io.circe" %%% "circe-pointer" % V.circe)
+  lazy val circeParser  = Def.setting("io.circe" %%% "circe-parser" % V.circe)
+  lazy val circeYaml    = Def.setting("io.circe" %%% "circe-yaml" % V.circe)
+  lazy val circeRefined = Def.setting("io.circe" %%% "circe-refined" % V.circe)
+  lazy val circeExtra   = Def.setting("io.circe" %%% "circe-extras" % V.circe)
+  lazy val circeNumbers = Def.setting("io.circe" %%% "circe-numbers" % V.circe)
 
   lazy val http4sCore = Def.setting("org.http4s" %%% "http4s-core" % V.http4s)
   lazy val http4sDsl  = Def.setting("org.http4s" %%% "http4s-dsl" % V.http4s)
@@ -175,6 +177,10 @@ object XLib {
   lazy val http4sEmber = Def.setting("org.http4s" %%% "http4s-ember-client" % V.http4s) // Diff with Blaze, use different on JVM or JS
   lazy val http4sCirce = Def.setting("org.http4s" %%% "http4s-circe" % V.http4s)
   lazy val http4sXml   = Def.setting("org.http4s" %%% "http4s-scala-xml" % V.http4s)
+
+  lazy val fs2        = Def.setting("co.fs2" %%% "fs2-core" % V.fs2)
+  lazy val fs2DataXml = Def.setting("org.gnieh" %%% "fs2-data-xml" % V.fs2Data) // Stub ScalaJS Only, thanks for the warning
+
   //  lazy val catsRetru: Def.setting = Def.setting("com.github.cb372", "cats-retry", Version.catsRetry)
   //  val fs2: Def.setting            = Def.setting("co.fs2", "fs2-core", Version.fs2) // fs-io is not xplatform, to JS at least.
   // val lCirceScodec: Def.setting     = Def.setting("io.circe", "circe-scodec", circeVersion) // There

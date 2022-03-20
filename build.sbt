@@ -10,6 +10,8 @@ ThisBuild / scalaVersion      := "3.1.1"
 ThisBuild / Test / fork       := false
 ThisBuild / versionScheme     := Some("early-semver")
 
+ThisBuild / scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+
 val myScalacOptions = Seq(
   "-source",
   "3.1",
@@ -40,64 +42,37 @@ ThisBuild / Compile / doc / scalacOptions ++=
 ThisBuild / apiURL          := Some(url("https://example.org/api/"))
 ThisBuild / autoAPIMappings := true
 
-// Seq("-versions-dictionary-url", "https://odenzo.github.com/ibkr-portal/versions.json") ++
-//   Seq("-groups") ++
-//    Seq("-external-mappings:.*scala.*::scaladoc3::https://scala-lang.org/api/3.x/,.*java.*::javadoc::https://docs.oracle")
-// .com/javase/8/docs/api/
-
-//
-
 lazy val root = project.in(file("."))
-  .aggregate(models.jvm, models.js, ibkr.jvm, ibkr.js)
+  .aggregate(flexquery.jvm, flexquery.js)
   .settings(
-    name           := "ibkr",
-    description    := "A minimal IBKR Portal and Flex Query Web API Library",
-    startYear      := Some(2022),
+    name           := "ibkr-flexquery-root",
     publish / skip := true,
     scalacOptions  := myScalacOptions
   )
 
-// Do I really want to run ScalaJS Tests ore JV< Test good enough?
-lazy val models = crossProject(JSPlatform, JVMPlatform)
+lazy val flexquery = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
-  .in(file("./modules/models"))
+  .in(file("./modules/flexquery"))
   .settings(
-    name               := "ibkr-portal-models",
-    description        := "Models for use in ScalaJS and Scala",
-    scalacOptions ++= myScalacOptions,
-    Test / test / fork := false,
+    name        := "ibkr-flexquery",
+    description := "A minimal Flex Query API Library",
     libraryDependencies ++= Seq(
-      XLib.lScribe.value,
       XLib.cats.value,
       XLib.catsEffect.value,
-      XLib.lCirceCore.value,
-      XLib.lCirceGeneric.value,
-      XLib.lMunit.value,
-      XLib.lMunitCats.value,
-      XLib.lPPrint.value,
-      XLib.monocle.value,
-      XLib.http4sCore.value,
-      XLib.http4sEmber.value,
-      XLib.scalaXML.value
-    )
-  )
-
-lazy val ibkr = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Full)
-  .in(file("./modules/ibkr"))
-  .dependsOn(models)
-  .settings(
-    name          := "ibkr-portal",
-    description   := "A minimal IBKR Portal and Flex Query API Library",
-    libraryDependencies ++= Seq(
+      XLib.catsRetry.value,
+      XLib.fs2.value,
+      XLib.fs2DataXml.value,
       XLib.http4sCore.value,
       XLib.http4sDsl.value,
-      XLib.http4sCirce.value,
       XLib.http4sEmber.value,
-      XLib.catsRetry.value
+      XLib.monocle.value,
+      XLib.pprint.value,
+      XLib.scalaXML.value,
+      XLib.scribe.value
     ),
-    libraryDependencies ++= Seq(XLib.lMunit.value, XLib.lMunitCats.value),
-    scalacOptions := myScalacOptions,
-    Test / javaOptions += "-DCI=true",
-    Test / fork   := true
+    libraryDependencies ++= Seq(XLib.munit.value, XLib.munitCats.value, XLib.scribe.value),
+    scalacOptions ++= myScalacOptions,
+    Test / javaOptions += "-DinCI=true"
+  ).jvmSettings(
+    libraryDependencies ++= Libs.scribeSLF4J
   )

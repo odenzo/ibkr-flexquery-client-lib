@@ -1,0 +1,5 @@
+<FlexStatementResponse timestamp='20 February, 2022 05:52 PM EST' foo='bar'>
+	<Status>Warn</Status>
+	<ErrorCode>1019</ErrorCode>
+	<ErrorMessage>This is a FAKE MESSAGE Statement generation in progress. Please try again shortly.</ErrorMessage>
+</FlexStatementResponse>
