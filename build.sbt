@@ -1,5 +1,6 @@
 import sbt.Keys.libraryDependencies
 
+ThisBuild / organization      := "com.odenzo"
 ThisBuild / githubOwner       := "odenzo"
 ThisBuild / githubRepository  := "ibkr-flexquery-lib"
 ThisBuild / githubTokenSource := TokenSource.Or(TokenSource.GitConfig("github.token"), TokenSource.Environment("GITHUB_TOKEN"))
